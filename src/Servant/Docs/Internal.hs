@@ -19,57 +19,41 @@
 
 module Servant.Docs.Internal where
 
-import           Prelude ()
-import           Prelude.Compat
+import Control.Applicative
+import Control.Arrow (second)
+import Control.Lens (makeLenses, mapped, over, traversed, view, (%~), (&), (.~), (<>~), (^.), (|>))
+import qualified Control.Monad.Omega as Omega
+import Data.Aeson.TypeScript.TH
+import qualified Data.ByteString.Char8 as BSC
+import Data.ByteString.Lazy.Char8 (ByteString)
+import qualified Data.CaseInsensitive as CI
+import Data.Foldable (fold)
+import Data.Foldable (toList)
+import Data.HashMap.Strict (HashMap)
+import Data.Hashable (Hashable)
+import Data.List.Compat (intercalate, intersperse, sort)
+import Data.List.NonEmpty (NonEmpty ((:|)), groupWith)
+import qualified Data.List.NonEmpty as NE
+import Data.Maybe
+import Data.Monoid (All (..), Any (..), Dual (..), First (..), Last (..), Product (..), Sum (..))
+import Data.Ord (comparing)
+import Data.Proxy (Proxy (Proxy))
+import Data.Semigroup (Semigroup (..))
+import Data.String.Conversions (cs)
+import Data.Text (Text, unpack)
+import Data.Typeable
+import GHC.Generics
+import GHC.TypeLits
+import Prelude ()
+import Prelude.Compat
+import Servant.API
+import Servant.API.ContentTypes
+import Servant.API.TypeLevel
 
-import           Control.Applicative
-import           Control.Arrow
-                 (second)
-import           Control.Lens
-                 (makeLenses, mapped, over, traversed, view, (%~), (&), (.~),
-                 (<>~), (^.), (|>))
-import qualified Control.Monad.Omega        as Omega
-import qualified Data.ByteString.Char8      as BSC
-import           Data.ByteString.Lazy.Char8
-                 (ByteString)
-import qualified Data.CaseInsensitive       as CI
-import           Data.Foldable
-                 (toList)
-import           Data.Foldable
-                 (fold)
-import           Data.HashMap.Strict
-                 (HashMap)
-import           Data.Hashable
-                 (Hashable)
-import           Data.List.Compat
-                 (intercalate, intersperse, sort)
-import           Data.List.NonEmpty
-                 (NonEmpty ((:|)), groupWith)
-import qualified Data.List.NonEmpty         as NE
-import           Data.Maybe
-import           Data.Monoid
-                 (All (..), Any (..), Dual (..), First (..), Last (..),
-                 Product (..), Sum (..))
-import           Data.Ord
-                 (comparing)
-import           Data.Proxy
-                 (Proxy (Proxy))
-import           Data.Semigroup
-                 (Semigroup (..))
-import           Data.String.Conversions
-                 (cs)
-import           Data.Text
-                 (Text, unpack)
-import           GHC.Generics
-import           GHC.TypeLits
-import           Servant.API
-import           Servant.API.ContentTypes
-import           Servant.API.TypeLevel
-
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Text                  as T
-import qualified Network.HTTP.Media         as M
-import qualified Network.HTTP.Types         as HTTP
+import qualified Data.HashMap.Strict as HM
+import qualified Data.Text as T
+import qualified Network.HTTP.Media as M
+import qualified Network.HTTP.Types as HTTP
 
 -- | An 'Endpoint' type that holds the 'path' and the 'method'.
 --
@@ -216,17 +200,6 @@ defaultDocOptions = DocOptions
 data ParamKind = Normal | List | Flag
   deriving (Eq, Ord, Show)
 
-data SomeProxy = forall a. SomeProxy (Proxy a)
-
-instance Eq SomeProxy where
-  a == b = True
-
-instance Ord SomeProxy where
-  a <= b = True
-
-instance Show SomeProxy where
-  show _ = "SomeProxy"
-
 -- | A type to represent an HTTP response. Has an 'Int' status, a list of
 -- possible 'MediaType's, and a list of example 'ByteString' response bodies.
 -- Tweak 'defResponse' using the 'respStatus', 'respTypes' and 'respBody'
@@ -245,11 +218,13 @@ instance Show SomeProxy where
 -- Response {_respStatus = 204, _respTypes = [], _respBody = [("If everything goes well",application/json,"{ \"status\": \"ok\" }")], _respHeaders = []}
 --
 data Response = Response
-  { _respStatus  :: Int
-  , _respTypes   :: [M.MediaType]
-  , _respBody    :: [(Text, M.MediaType, ByteString)]
-  , _respHeaders :: [HTTP.Header]
-  , _respProxy   :: SomeProxy
+  { _respStatus                 :: Int
+  , _respTypes                  :: [M.MediaType]
+  , _respBody                   :: [(Text, M.MediaType, ByteString)]
+  , _respHeaders                :: [HTTP.Header]
+  , _respTSType                 :: TSType
+  , _respTypeScriptType         :: String
+  , _respTypeScriptDeclarations :: [TSDeclaration]
   } deriving (Eq, Ord, Show)
 
 -- | Default response: status code 200, no response body.
@@ -264,11 +239,13 @@ data Response = Response
 --
 defResponse :: Response
 defResponse = Response
-  { _respStatus  = 200
-  , _respTypes   = []
-  , _respBody    = []
-  , _respHeaders = []
-  , _respProxy   = SomeProxy (Proxy :: Proxy ())
+  { _respStatus                 = 200
+  , _respTypes                  = []
+  , _respBody                   = []
+  , _respHeaders                = []
+  , _respTSType                 = TSType (Proxy :: Proxy ())
+  , _respTypeScriptType         = "void"
+  , _respTypeScriptDeclarations = []
   }
 
 -- | A datatype that represents everything that can happen
@@ -282,15 +259,16 @@ defResponse = Response
 -- You can tweak an 'Action' (like the default 'defAction') with these lenses
 -- to transform an action and add some information to it.
 data Action = Action
-  { _authInfo :: [DocAuthentication]         -- user supplied info
-  , _captures :: [DocCapture]                -- type collected + user supplied info
-  , _headers  :: [Text]                      -- type collected
-  , _params   :: [DocQueryParam]             -- type collected + user supplied info
-  , _notes    :: [DocNote]                   -- user supplied
-  , _mxParams :: [(String, [DocQueryParam])] -- type collected + user supplied info
-  , _rqtypes  :: [M.MediaType]               -- type collected
-  , _rqbody   :: [(Text, M.MediaType, ByteString)] -- user supplied
-  , _response :: Response                    -- user supplied
+  { _authInfo   :: [DocAuthentication]               -- user supplied info
+  , _captures   :: [DocCapture]                      -- type collected + user supplied info
+  , _headers    :: [Text]                            -- type collected
+  , _params     :: [DocQueryParam]                   -- type collected + user supplied info
+  , _notes      :: [DocNote]                         -- user supplied
+  , _mxParams   :: [(String, [DocQueryParam])]       -- type collected + user supplied info
+  , _rqtypes    :: [M.MediaType]                     -- type collected
+  , _rqbody     :: [(Text, M.MediaType, ByteString)] -- user supplied
+  , _rqBodyType :: TSType
+  , _response   :: Response                          -- user supplied
   } deriving (Eq, Ord, Show)
 
 -- | Combine two Actions, we can't make a monoid as merging Response breaks the
@@ -300,8 +278,8 @@ data Action = Action
 -- 'combineAction' to mush two together taking the response, body and content
 -- types from the very left.
 combineAction :: Action -> Action -> Action
-Action a c h p n m ts body resp `combineAction` Action a' c' h' p' n' m' _ _ _ =
-        Action (a <> a') (c <> c') (h <> h') (p <> p') (n <> n') (m <> m') ts body resp
+Action a c h p n m ts body bodyType resp `combineAction` Action a' c' h' p' n' m' _ _ _ _ =
+        Action (a <> a') (c <> c') (h <> h') (p <> p') (n <> n') (m <> m') ts body bodyType resp
 
 -- | Default 'Action'. Has no 'captures', no query 'params', expects
 -- no request body ('rqbody') and the typical response is 'defResponse'.
@@ -324,6 +302,7 @@ defAction =
          []
          []
          []
+         (TSType (Proxy :: Proxy ()))
          defResponse
 
 -- | Create an API that's comprised of a single endpoint.
@@ -860,7 +839,7 @@ instance (KnownSymbol sym, ToCapture (CaptureAll sym a), HasDocs sublayout)
 
 
 instance {-# OVERLAPPABLE #-}
-        (ToSample a, AllMimeRender (ct ': cts) a, KnownNat status
+        (ToSample a, TypeScript a, Typeable a, AllMimeRender (ct ': cts) a, KnownNat status
         , ReflectMethod method)
     => HasDocs (Verb method status (ct ': cts) a) where
   docsFor Proxy (endpoint, action) DocOptions{..} =
@@ -870,6 +849,9 @@ instance {-# OVERLAPPABLE #-}
           action' = action & response.respBody .~ take _maxSamples (sampleByteStrings t p)
                            & response.respTypes .~ allMime t
                            & response.respStatus .~ status
+                           & response.respTSType .~ TSType (Proxy :: Proxy a)
+                           & response.respTypeScriptType .~ getTypeScriptType (Proxy :: Proxy a)
+                           & response.respTypeScriptDeclarations .~ getTypeScriptDeclarations (Proxy :: Proxy a)
           t = Proxy :: Proxy (ct ': cts)
           method' = reflectMethod (Proxy :: Proxy method)
           status = fromInteger $ natVal (Proxy :: Proxy status)
@@ -894,7 +876,7 @@ instance {-# OVERLAPPABLE #-}
           status = fromInteger $ natVal (Proxy :: Proxy status)
 
 instance {-# OVERLAPPING #-}
-        (ToSample a, AllMimeRender (ct ': cts) a, KnownNat status
+        (ToSample a, TypeScript a, Typeable a, AllMimeRender (ct ': cts) a, KnownNat status
         , ReflectMethod method, AllHeaderSamples ls, GetHeaders (HList ls))
     => HasDocs (Verb method status (ct ': cts) (Headers ls a)) where
   docsFor Proxy (endpoint, action) DocOptions{..} =
@@ -905,7 +887,9 @@ instance {-# OVERLAPPING #-}
                            & response.respTypes .~ allMime t
                            & response.respStatus .~ status
                            & response.respHeaders .~ hdrs
-                           & response.respProxy .~ SomeProxy (Proxy :: Proxy a)
+                           & response.respTSType .~ TSType (Proxy :: Proxy a)
+                           & response.respTypeScriptType .~ getTypeScriptType (Proxy :: Proxy a)
+                           & response.respTypeScriptDeclarations .~ getTypeScriptDeclarations (Proxy :: Proxy a)
           t = Proxy :: Proxy (ct ': cts)
           hdrs = allHeaderToSample (Proxy :: Proxy ls)
           method' = reflectMethod (Proxy :: Proxy method)
@@ -982,7 +966,7 @@ instance (KnownSymbol desc, HasDocs api)
 -- example data. However, there's no reason to believe that the instances of
 -- 'AllMimeUnrender' and 'AllMimeRender' actually agree (or to suppose that
 -- both are even defined) for any particular type.
-instance (ToSample a, AllMimeRender (ct ': cts) a, HasDocs api)
+instance (Typeable a, TypeScript a, ToSample a, AllMimeRender (ct ': cts) a, HasDocs api)
       => HasDocs (ReqBody' mods (ct ': cts) a :> api) where
   docsFor Proxy (endpoint, action) opts@DocOptions{..} =
     docsFor subApiP (endpoint, action') opts
@@ -990,6 +974,7 @@ instance (ToSample a, AllMimeRender (ct ': cts) a, HasDocs api)
     where subApiP = Proxy :: Proxy api
           action' :: Action
           action' = action & rqbody .~ take _maxSamples (sampleByteStrings t p)
+                           & rqBodyType .~ (TSType (Proxy :: Proxy a))
                            & rqtypes .~ allMime t
           t = Proxy :: Proxy (ct ': cts)
           p = Proxy :: Proxy a

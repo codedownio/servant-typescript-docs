@@ -51,9 +51,8 @@ module Servant.Docs
   , DocQueryParam(..), ParamKind(..), paramName, paramValues, paramDesc, paramKind
   , DocNote(..), noteTitle, noteBody
   , DocIntro(..), introTitle, introBody
-  , SomeProxy(..)
-  , Response(..), respStatus, respTypes, respBody, respProxy, defResponse
-  , Action, authInfo, captures, headers, notes, params, rqtypes, rqbody, response, defAction
+  , Response(..), respStatus, respTypes, respBody, respTSType, respTypeScriptType, respTypeScriptDeclarations, defResponse
+  , Action, authInfo, captures, headers, notes, params, rqtypes, rqbody, rqBodyType, response, defAction
   , single
   ) where
 

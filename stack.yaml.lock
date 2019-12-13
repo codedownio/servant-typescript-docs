@@ -3,7 +3,21 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    cabal-file:
+      size: 2718
+      sha256: 70aa2e1a56f310f35f2279d86fea28bc5921b1f3f55b3e385f31806c7204d363
+    name: aeson-typescript
+    version: 0.2.0.0
+    git: https://github.com/codedownio/aeson-typescript.git
+    pantry-tree:
+      size: 1999
+      sha256: eb7cd40dbff00ef4483fbb5264b5169fd40eb9e19fd7494ad2dd3f48ff47c8e3
+    commit: 01780377824dcceb213c2bc8307010abc53ef56c
+  original:
+    git: https://github.com/codedownio/aeson-typescript.git
+    commit: 01780377824dcceb213c2bc8307010abc53ef56c
 snapshots:
 - completed:
     size: 524804

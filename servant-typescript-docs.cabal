@@ -1,16 +1,12 @@
 cabal-version:       >=1.10
-name:                servant-docs
+name:                servant-typescript-docs
 version:             0.11.3
 x-revision:          3
 
 synopsis:            generate API docs for your servant webservice
 category:            Servant, Web
 description:
-  Library for generating API docs from a servant API definition.
-  .
-  Runnable example <https://github.com/haskell-servant/servant/blob/master/servant-docs/example/greet.hs here>.
-  .
-  <https://github.com/haskell-servant/servant/blob/master/servant-docs/CHANGELOG.md CHANGELOG>
+  Library for generating TypeScript API docs from a servant API definition.
 
 homepage:            http://docs.servant.dev/
 bug-reports:         http://github.com/haskell-servant/servant/issues
@@ -60,6 +56,7 @@ library
   build-depends:
       aeson                >= 1.4.1.0  && < 1.5
     , aeson-pretty         >= 0.8.5    && < 0.9
+    , aeson-typescript
     , base-compat          >= 0.10.5   && < 0.11
     , case-insensitive     >= 1.2.0.11 && < 1.3
     , control-monad-omega  >= 0.3.1    && < 0.4
@@ -73,20 +70,6 @@ library
   hs-source-dirs: src
   default-language: Haskell2010
   ghc-options: -Wall -Wno-redundant-constraints
-
-executable greet-docs
-  main-is: greet.hs
-  hs-source-dirs: example
-  ghc-options: -Wall
-  build-depends:
-      base
-    , aeson
-    , lens
-    , servant
-    , servant-docs
-    , string-conversions
-    , text
-  default-language: Haskell2010
 
 test-suite spec
   default-language: Haskell2010
@@ -103,7 +86,7 @@ test-suite spec
     , aeson
     , lens
     , servant
-    , servant-docs
+    , servant-typescript-docs
     , string-conversions
 
   -- Additonal dependencies
@@ -112,4 +95,3 @@ test-suite spec
       tasty-golden  >= 2.3.2    && < 2.4,
       tasty-hunit   >= 0.10.0.1 && < 0.11,
       transformers  >= 0.5.2.0  && < 0.6
-

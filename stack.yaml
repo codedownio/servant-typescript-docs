@@ -4,3 +4,6 @@ resolver: lts-14.16
 packages:
 - .
 
+extra-deps:
+- git: https://github.com/codedownio/aeson-typescript.git
+  commit: f6a1a6085ac851acb4606cb5812319985d43690f
