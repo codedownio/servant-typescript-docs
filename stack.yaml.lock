@@ -13,11 +13,11 @@ packages:
     git: https://github.com/codedownio/aeson-typescript.git
     pantry-tree:
       size: 1999
-      sha256: eb7cd40dbff00ef4483fbb5264b5169fd40eb9e19fd7494ad2dd3f48ff47c8e3
-    commit: 01780377824dcceb213c2bc8307010abc53ef56c
+      sha256: 53ac308abc2b6ba24dad0592d602bccd5bba0f02dbcdcca1b8c27743108da32a
+    commit: 8a084f0d371ad55158b6c37b989768d382bcc086
   original:
     git: https://github.com/codedownio/aeson-typescript.git
-    commit: 01780377824dcceb213c2bc8307010abc53ef56c
+    commit: 8a084f0d371ad55158b6c37b989768d382bcc086
 snapshots:
 - completed:
     size: 524804

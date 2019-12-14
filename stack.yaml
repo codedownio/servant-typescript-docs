@@ -6,4 +6,4 @@ packages:
 
 extra-deps:
 - git: https://github.com/codedownio/aeson-typescript.git
-  commit: f6a1a6085ac851acb4606cb5812319985d43690f
+  commit: 8a084f0d371ad55158b6c37b989768d382bcc086
