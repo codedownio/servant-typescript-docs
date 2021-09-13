@@ -6,18 +6,18 @@
 packages:
 - completed:
     name: aeson-typescript
-    version: 0.2.0.0
+    version: 0.4.0.0
     git: https://github.com/codedownio/aeson-typescript.git
     pantry-tree:
-      size: 2251
-      sha256: 7a514e8d3af272bc7a1b4d8d16dc0c53d13b3a8eca99f4132f6304b8b2801e2c
-    commit: 8f23f6b6423fe971ef1dceba65d11794e24cf32f
+      size: 3567
+      sha256: e2bb86e977d52c40c7142d976caebd913d32925c7d79444dcd2e11a2f353c14e
+    commit: 8985dcfef73873382b5ee05137673053ada12b20
   original:
     git: https://github.com/codedownio/aeson-typescript.git
-    commit: 8f23f6b6423fe971ef1dceba65d11794e24cf32f
+    commit: 8985dcfef73873382b5ee05137673053ada12b20
 snapshots:
 - completed:
-    size: 531707
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/5.yaml
-    sha256: 9751e25e0af5713a53ddcfcc79564b082c71b1b357fadef0d85672a5b5ba3703
-  original: lts-16.5
+    size: 580841
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2021/9/12.yaml
+    sha256: 9a598c6972322ef015a58e363932da9be116161eee067ab6918afa6a9d6e3f20
+  original: nightly-2021-09-12

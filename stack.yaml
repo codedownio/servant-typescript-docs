@@ -1,9 +1,9 @@
 
-resolver: lts-16.5
+resolver: nightly-2021-09-12
 
 packages:
 - .
 
 extra-deps:
 - git: https://github.com/codedownio/aeson-typescript.git
-  commit: 8f23f6b6423fe971ef1dceba65d11794e24cf32f
+  commit: 8985dcfef73873382b5ee05137673053ada12b20
