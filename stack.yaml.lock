@@ -3,21 +3,10 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    commit: 8985dcfef73873382b5ee05137673053ada12b20
-    git: https://github.com/codedownio/aeson-typescript.git
-    name: aeson-typescript
-    pantry-tree:
-      sha256: e2bb86e977d52c40c7142d976caebd913d32925c7d79444dcd2e11a2f353c14e
-      size: 3567
-    version: 0.4.0.0
-  original:
-    commit: 8985dcfef73873382b5ee05137673053ada12b20
-    git: https://github.com/codedownio/aeson-typescript.git
+packages: []
 snapshots:
 - completed:
-    sha256: 8cf0695c568d7135f24b248c328bc80c32601b0c3a469aa5151196580781d84e
-    size: 604751
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2023/4/14.yaml
-  original: nightly-2023-04-14
+    sha256: 1b4c2669e26fa828451830ed4725e4d406acc25a1fa24fcc039465dd13d7a575
+    size: 714100
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/6.yaml
+  original: lts-22.6
