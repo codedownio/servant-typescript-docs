@@ -1,5 +1,5 @@
 
-resolver: nightly-2024-06-12
+resolver: nightly-2025-04-17
 
 packages:
 - .
